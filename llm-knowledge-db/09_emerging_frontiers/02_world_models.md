@@ -1,8 +1,8 @@
 # World Models
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Related Files:** [Audio, Video and Beyond](../07_multimodal/03_audio_video_and_beyond.md) · [Non-Transformer Architectures](04_neuromorphic_and_non_transformer.md) · [Frontier Open Problems](05_frontier_open_problems.md)
-> **Key Papers:** Ha & Schmidhuber 2018 World Models ([arXiv:1803.10122](https://arxiv.org/abs/1803.10122)) · OpenAI 2024 Sora (Video Generation as World Simulators) · Bruce et al. 2024 Genie ([arXiv:2402.15391](https://arxiv.org/abs/2402.15391)) · LeCun 2022 A Path Towards Autonomous Machine Intelligence (JEPA)
+> **Key Papers:** Ha & Schmidhuber 2018 World Models ([arXiv:1803.10122](https://arxiv.org/abs/1803.10122)) · OpenAI 2024 Sora (Video Generation as World Simulators) · Bruce et al. 2024 Genie ([arXiv:2402.15391](https://arxiv.org/abs/2402.15391)) · LeCun 2022 A Path Towards Autonomous Machine Intelligence (JEPA) · Assran et al. 2025 V-JEPA 2 ([arXiv:2506.09985](https://arxiv.org/abs/2506.09985))
 
 ## Overview
 A **world model** is an internal, predictive model of how an environment evolves — enabling an agent to *imagine* the consequences of actions and plan without acting in the real world. The concept (Ha & Schmidhuber 2018) is central to model-based RL and, increasingly, to debates about LLMs and video models. Two big questions animate this frontier: (1) Are large generative video models (Sora, Veo, Genie) **implicit world models** that learn physics and dynamics? (2) Are **LLMs** themselves world models, or merely statistical pattern-matchers lacking grounded understanding? Yann LeCun's **JEPA** program is the most prominent alternative architecture explicitly designed to build world models. This is a conceptually deep, hotly contested area.
@@ -12,11 +12,13 @@ A **world model** is an internal, predictive model of how an environment evolves
 
 **Video generation as world simulation (Sora).** OpenAI framed Sora as a step toward "**general-purpose simulators of the physical world**": trained to generate video, it appears to learn aspects of 3D consistency, object permanence, and crude physics as **emergent** byproducts. Proponents argue scaling video generation yields world models; skeptics note frequent physics violations (objects morphing, impossible dynamics) revealing it models *appearance statistics*, not *causal physics*.
 
-**Interactive/action-conditioned world models (Genie).** DeepMind's **Genie** learned, from unlabeled internet videos, a **latent action space** and a model that generates the *next frame conditioned on an inferred action* — effectively a learned, playable 2D world generator. Genie 2/3 extended this to richer 3D, controllable, longer-horizon environments — a route to training embodied agents in generated worlds.
+**Interactive/action-conditioned world models (Genie).** DeepMind's **Genie** learned, from unlabeled internet videos, a **latent action space** and a model that generates the *next frame conditioned on an inferred action* — effectively a learned, playable 2D world generator. Genie 2/3 extended this to richer 3D, controllable, longer-horizon environments — a route to training embodied agents in generated worlds. **Genie 3** (2025-08) generates navigable 720p worlds in real time at 24 fps, consistent for minutes, with text-promptable "world events"; its memory is *emergent* (no explicit 3D representation).
 
 **The LLM debate.** Do LLMs build world models? Evidence *for*: probing reveals models can encode latent state (e.g., the **Othello-GPT** board state, spatial/temporal world representations, entity tracking). Evidence *against*: brittleness, inconsistency, and reliance on surface statistics suggest no robust, causal world model. The truth is likely *partial* — LLMs build **fragmentary, task-useful** world representations without a coherent, complete model.
 
-**JEPA (LeCun's alternative).** Joint-Embedding Predictive Architecture: instead of generating pixels/tokens, predict in an **abstract representation space** (predict the *embedding* of the future, not its raw form), trained non-contrastively (I-JEPA, V-JEPA). LeCun argues generative token/pixel prediction is the *wrong* objective for world modeling — you should predict abstract, predictable structure and discard unpredictable detail — and that this, with energy-based planning, is the path to grounded machine intelligence beyond autoregressive LLMs.
+**Video models as zero-shot reasoners.** GDM's 2025 study argues that large video generators (Veo 3) solve perception, physics, manipulation and maze tasks zero-shot via "**chain-of-frames**" — the visual analogue of chain-of-thought — making video generation a candidate general-purpose vision substrate, not just a renderer.
+
+**JEPA (LeCun's alternative).** Joint-Embedding Predictive Architecture: instead of generating pixels/tokens, predict in an **abstract representation space** (predict the *embedding* of the future, not its raw form), trained non-contrastively (I-JEPA, V-JEPA, V-JEPA 2). LeCun argues generative token/pixel prediction is the *wrong* objective for world modeling — you should predict abstract, predictable structure and discard unpredictable detail — and that this, with energy-based planning, is the path to grounded machine intelligence beyond autoregressive LLMs.
 
 ## Key Challenges
 - **Physics vs appearance.** Generative video models capture look, not reliable causal dynamics; long-horizon consistency and physical plausibility fail.
@@ -26,16 +28,23 @@ A **world model** is an internal, predictive model of how an environment evolves
 - **Compute.** Video/world models are extremely compute- and data-intensive.
 
 ## Solutions & Current Best Practices
-There is no settled approach — this is open research. Pragmatically: **action-conditioned generative models** (Genie-style) for training embodied agents in simulation; **probing + interventions** to assess what world structure a model encodes; **JEPA-style abstract prediction** as a non-generative alternative under active development; and **model-based RL** (Dreamer/MuZero lineage) where explicit world models already deliver planning gains in games/robotics. For LLMs, the practical stance is to *use* their partial world knowledge while grounding via tools/retrieval/perception.
+There is no settled approach — this is open research. Pragmatically: **action-conditioned generative models** (Genie-style) for training embodied agents in simulation; **probing + interventions** to assess what world structure a model encodes; **JEPA-style abstract prediction** as a non-generative alternative under active development; and **model-based RL** (Dreamer/MuZero lineage) where explicit world models already deliver planning gains in games/robotics. **Latent-space planning** now works on real robots: V-JEPA 2-AC plans zero-shot via MPC in representation space after <62 h of unlabeled robot video. For LLMs, the practical stance is to *use* their partial world knowledge while grounding via tools/retrieval/perception.
 
 ## Lab Perspectives
-- **OpenAI:** Sora as "world simulator"; bets that scaling generative video yields world models.
-- **Google DeepMind:** **Genie** (interactive world generation), Dreamer/MuZero (model-based RL), Veo; deep model-based-planning heritage; explicit "world models" research org.
-- **Meta (LeCun/FAIR):** **JEPA** (I-JEPA, V-JEPA) — the prominent *anti-generative* world-model program; LeCun is the loudest skeptic of LLMs-as-AGI.
+- **OpenAI:** Sora as "world simulator"; Sora 2 (2025-09) adds jointly generated synchronized audio and improved physical plausibility; bets that scaling generative video yields world models.
+- **Google DeepMind:** **Genie 3** (real-time interactive worlds, pitched as an agent training ground; limited research preview), Veo 3 (native audio; chain-of-frames reasoning), Dreamer/MuZero (model-based RL), Gemini Robotics 2 / ER 2 (2026-07, secondary); deep model-based-planning heritage; explicit "world models" research org.
+- **Meta FAIR:** **JEPA** (I-JEPA, V-JEPA, **V-JEPA 2**) — the prominent *anti-generative* world-model program, now with robot-planning results; LeCun is the loudest skeptic of LLMs-as-AGI. (Meta's frontier LLM effort moved to the closed Muse line in 2026, separate from FAIR's JEPA work.)
 - **Robotics/embodied labs:** world models for sim-to-real and planning (RT-2, robotics foundation models).
 
-## Latest Developments (2023–2026)
+## Latest Developments (2023–Nov 2026)
 **Interactive world models** advanced rapidly (Genie 2/3, generated playable environments) as a substrate for training agents. **Video generation** (Sora, Veo) reignited the "emergent physics" debate. **V-JEPA 2** and abstract-prediction approaches matured as LeCun's alternative. Growing interest in **world models for agents/robotics** (planning, sim-to-real) and in rigorously testing whether scaled generative models learn causal structure or sophisticated interpolation.
+
+**Mid-2025 → Nov 2026 update:**
+- **V-JEPA 2 (2025-06, Meta FAIR).** Self-supervised video JEPA pretrained on >1M hours of internet video (77.3% on SSv2); **V-JEPA 2-AC**, post-trained on <62 h of unlabeled DROID robot video, plans **zero-shot via MPC in latent space** for pick-and-place on Franka arms ([arXiv:2506.09985](https://arxiv.org/abs/2506.09985)) — the strongest evidence yet that non-generative, representation-space prediction supports control.
+- **Genie 3 (2025-08, GDM).** Real-time, interactive 720p/24 fps world generation, consistent for a few minutes, with promptable world events and emergent memory (no explicit 3D state); framed as a training ground for embodied agents; limited research preview only (DeepMind blog via press).
+- **Chain-of-frames (2025-09, GDM).** "Video models are zero-shot learners and reasoners": Veo 3 solves perception, physics, manipulation and maze-style tasks zero-shot, sharply improving over Veo 2 ([arXiv:2509.20328](https://arxiv.org/abs/2509.20328)) — supports the "scale generative video → general visual reasoning" thesis.
+- **Joint audio-video generation (2025-05 → 2025-09).** Veo 3 introduced native audio; Sora 2 generates video and synchronized dialogue/SFX jointly with better physical plausibility (press coverage) — world simulators become multimodal.
+- **Embodied foundation models (2026-07, secondary).** Gemini Robotics 2 (VLA for whole-body humanoid control) with Gemini Robotics ER 2 (embodied-reasoning planner reportedly built on Gemini 3.5 Flash) headline multi-robot task splitting — world knowledge from frontier VLMs is being routed into planners rather than learned from pixels alone.
 
 ## Interview Angles
 > 💡 **What labs actually ask:**
@@ -43,9 +52,10 @@ There is no settled approach — this is open research. Pragmatically: **action-
 - **"Is Sora a world model?"** Learns appearance + some emergent structure, but violates physics → debate between emergence and statistics.
 - **"What is JEPA and why does LeCun prefer it?"** Predict in abstract embedding space (not pixels/tokens); discard unpredictable detail; argued path to grounded intelligence beyond autoregression.
 - **"How would you test if a model has a world model?"** Probing latent state, causal interventions, counterfactual/physics consistency tests.
+- **"Generative (Genie 3/Veo 3) vs latent-predictive (V-JEPA 2) world models for robot planning?"** Pixel generation gives rich, promptable simulators and zero-shot visual reasoning but is costly and physics-unreliable; latent prediction is cheap to roll out inside MPC and ignores unpredictable detail, but gives no human-inspectable rollouts.
 
 ## Open Problems
-Whether generative (pixel/token) prediction can yield **robust, causal** world models — or whether **abstract-prediction (JEPA)** / explicit model-based approaches are needed — is unresolved and foundational. Operationalizing "has a world model," achieving reliable **physical reasoning and long-horizon planning**, and grounding language models in genuine world structure are central open questions tied to the road to AGI.
+Whether generative (pixel/token) prediction can yield **robust, causal** world models (minutes-long consistency in Genie 3 is still far from hours-long physical fidelity) — or whether **abstract-prediction (JEPA)** / explicit model-based approaches are needed — is unresolved and foundational. Operationalizing "has a world model," achieving reliable **physical reasoning and long-horizon planning**, and grounding language models in genuine world structure are central open questions tied to the road to AGI.
 
 ## References
 - Ha, D., Schmidhuber, J. (2018). *World Models.* arXiv:1803.10122.
@@ -53,3 +63,5 @@ Whether generative (pixel/token) prediction can yield **robust, causal** world m
 - Bruce, J. et al. (2024). *Genie.* arXiv:2402.15391.
 - LeCun, Y. (2022). *A Path Towards Autonomous Machine Intelligence (JEPA).*
 - Li, K. et al. (2022). *Othello-GPT / Emergent World Representations.* arXiv:2210.13382.
+- Assran, M. et al. (2025). *V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning.* arXiv:2506.09985.
+- Wiedemer, T. et al. (2025). *Video Models are Zero-Shot Learners and Reasoners.* arXiv:2509.20328.

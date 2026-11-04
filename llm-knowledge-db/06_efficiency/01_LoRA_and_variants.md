@@ -1,20 +1,20 @@
 # LoRA and Variants
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Related Files:** [Parameter-Efficient Fine-Tuning](00_parameter_efficient_finetuning.md) · [Quantization Techniques](02_quantization_techniques.md) · [Supervised Fine-Tuning](../03_posttraining/01_supervised_finetuning_SFT.md)
-> **Key Papers:** Hu et al. 2021 LoRA ([arXiv:2106.09685](https://arxiv.org/abs/2106.09685)) · Dettmers et al. 2023 QLoRA ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314)) · Liu et al. 2024 DoRA ([arXiv:2402.09353](https://arxiv.org/abs/2402.09353)) · Hayou et al. 2024 LoRA+ ([arXiv:2402.12354](https://arxiv.org/abs/2402.12354))
+> **Key Papers:** Hu et al. 2021 LoRA ([arXiv:2106.09685](https://arxiv.org/abs/2106.09685)) · Dettmers et al. 2023 QLoRA ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314)) · Liu et al. 2024 DoRA ([arXiv:2402.09353](https://arxiv.org/abs/2402.09353)) · Hayou et al. 2024 LoRA+ ([arXiv:2402.12354](https://arxiv.org/abs/2402.12354)) · Thinking Machines 2025 LoRA Without Regret (blog)
 
 ## Overview
-LoRA (Low-Rank Adaptation) is the single most important parameter-efficient fine-tuning method and one of the most-used techniques in all of applied LLM work. Its premise: the weight *update* needed to adapt a pretrained model to a task has **low intrinsic rank**, so instead of learning a full $d\times k$ update matrix, learn its low-rank factorization. This cuts trainable parameters by 100–10,000×, slashes optimizer-state memory, produces tiny (MB-scale) checkpoints, and — crucially — can be **merged back** into the base weights for **zero inference latency**. Combined with quantization (QLoRA), it enables fine-tuning 65B+ models on a single consumer GPU. The LoRA math and its tradeoffs vs full fine-tuning are common interview material.
+LoRA (Low-Rank Adaptation) is the single most important parameter-efficient fine-tuning method and one of the most-used techniques in all of applied LLM work. Its premise: the weight *update* needed to adapt a pretrained model to a task has **low intrinsic rank**, so instead of learning a full $d\times k$ update matrix, learn its low-rank factorization. This cuts trainable parameters by 100–10,000×, slashes optimizer-state memory, produces tiny (MB-scale) checkpoints, and — crucially — can be **merged back** into the base weights for **zero inference latency**. Combined with quantization (QLoRA), it enables fine-tuning 65B+ models on a single consumer GPU. The LoRA math and its tradeoffs vs full fine-tuning are common interview material; since 2025 the question has shifted from "is LoRA good enough?" to "under which conditions is LoRA provably as good as full fine-tuning?"
 
 ## Core Concepts
 **The decomposition.** For a frozen pretrained weight $W_0 \in \mathbb{R}^{d\times k}$, LoRA represents the update as a product of two low-rank matrices:
 $$W = W_0 + \Delta W = W_0 + BA,\quad B\in\mathbb{R}^{d\times r},\ A\in\mathbb{R}^{r\times k},\ r\ll \min(d,k)$$
 Only $A$ and $B$ are trained ($W_0$ frozen). Trainable params drop from $dk$ to $r(d+k)$. The forward pass is $h = W_0 x + BA x$, scaled by $\frac{\alpha}{r}$ (a tunable factor). **Initialization:** $A$ random Gaussian, $B=0$, so $\Delta W=0$ at start (training begins exactly at the pretrained model). At inference, compute $W_0 + BA$ once and **merge** — no extra latency or parameters.
 
-**Where to apply.** Originally the attention projections ($W_q, W_v$); modern practice applies LoRA to *all* linear layers (Q,K,V,O and the FFN/MLP matrices), which improves quality, especially at low rank.
+**Where to apply.** Originally the attention projections ($W_q, W_v$); modern practice applies LoRA to *all* linear layers (Q,K,V,O and the FFN/MLP matrices), which improves quality, especially at low rank. On MoE models the MLP/expert matrices hold most parameters, and LoRA on them matters most; attention-only LoRA clearly underperforms.
 
-**Hyperparameters.** **Rank $r$** (typically 8–64; higher for harder tasks/larger shifts), **$\alpha$** (scaling; common heuristic $\alpha=2r$), target modules, and LoRA dropout. Quality is fairly robust to $r$ above a task-dependent threshold; too-low $r$ underfits large shifts.
+**Hyperparameters.** **Rank $r$** (typically 8–64; higher for harder tasks/larger shifts), **$\alpha$** (scaling; common heuristic $\alpha=2r$), target modules, and LoRA dropout. Quality is fairly robust to $r$ above a task-dependent threshold; too-low $r$ underfits large shifts. The optimal LoRA **learning rate is ~10× the full-fine-tuning LR**.
 
 **QLoRA.** Dettmers et al.: quantize the **frozen base model to 4-bit** (NF4 — a normal-float datatype optimal for normally-distributed weights), keep LoRA adapters in bf16, and backprop through the quantized base. Innovations: **NF4**, **double quantization** (quantize the quantization constants), and **paged optimizers** (handle memory spikes). Result: fine-tune a 65B model on a single 48GB GPU with negligible quality loss — a landmark for accessibility.
 
@@ -33,16 +33,23 @@ Only $A$ and $B$ are trained ($W_0$ frozen). Trainable params drop from $dk$ to 
 - **Optimization differences.** Vanilla LoRA's symmetric LR for $A,B$ is suboptimal (fixed by LoRA+).
 
 ## Solutions & Current Best Practices
-**Default recipe:** LoRA on **all linear layers**, $r=16$–$64$, $\alpha=2r$, plus **QLoRA (NF4)** when memory-constrained. Use **DoRA or LoRA+** for a quality bump at low cost; **PiSSA/LoftQ** init for faster convergence (and better quantized init). For serving many tasks, use **multi-LoRA** systems (S-LoRA, Punica) that keep one base model and hot-swap adapters. Prefer **full fine-tuning** when maximal quality on a large distribution shift is required and resources allow. Validate that merged weights match the adapter-applied forward pass.
+**Default recipe:** LoRA on **all linear layers including MLP/MoE experts**, $r=16$–$64$ for SFT (rank 1–8 is enough for RL), $\alpha=2r$ (or fixed $\alpha$ with $\alpha/r$ scaling), LR ~10× the full-FT LR, plus **QLoRA (NF4)** when memory-constrained. Use **DoRA or LoRA+** for a quality bump at low cost; **PiSSA/LoftQ** init for faster convergence (and better quantized init). For serving many tasks, use **multi-LoRA** systems (S-LoRA, Punica) that keep one base model and hot-swap adapters. Prefer **full fine-tuning** when maximal quality on a large distribution shift is required and resources allow. Validate that merged weights match the adapter-applied forward pass.
 
 ## Lab Perspectives
 - **Microsoft** authored LoRA; it underpins much of Azure/OpenAI customization tooling.
 - **Open-source ecosystem** (HuggingFace PEFT, Unsloth, Axolotl) made LoRA/QLoRA the default community fine-tuning method.
+- **Thinking Machines Lab** ("LoRA Without Regret") made the strongest case that properly configured LoRA matches full fine-tuning for most post-training, including RL.
 - **Frontier labs** use full fine-tuning for flagship post-training but offer **LoRA fine-tuning APIs** and rely on **multi-adapter serving** for customer customization.
 - **Cloud/serving providers** standardized **multi-LoRA** to serve many tenants over a shared base.
 
-## Latest Developments (2023–2026)
+## Latest Developments (2023–Nov 2026)
 **QLoRA** democratized large-model fine-tuning; **DoRA/LoRA+/PiSSA/rsLoRA** narrowed the gap to full fine-tuning. **Multi-LoRA serving** became production-standard. LoRA-style adapters are increasingly used in **RL post-training** (cheaper GRPO/DPO) and **continual learning** (per-skill adapters). Research continues on **when LoRA suffices vs full fine-tuning** (LoRA learns less but forgets less — a useful regularization tradeoff) and on better initialization/optimization.
+
+**Mid-2025 → Nov 2026 update:**
+- **LoRA Without Regret (2025-09).** With LoRA on all layers (MLP/MoE included) and ~10× LR, LoRA matches full fine-tuning across typical post-training dataset sizes; attention-only LoRA underperforms; LoRA falls behind mainly when a large SFT dataset exceeds its capacity.
+- **Rank-1 suffices for RL (2025-09).** Because policy-gradient RL with scalar rewards transmits ~1 bit per episode, rank-1 LoRA matches full-FT RL — making LoRA the economical default for GRPO-style training. PRISM's finding that RL updates only ~5% of parameters ([arXiv:2603.17074](https://arxiv.org/abs/2603.17074)) is consistent with this picture.
+- **"Learns less, forgets less" quantified (2025-10).** In Meta FAIR's continual-learning comparison, NaturalQuestions forgetting is 71% for LoRA vs 89% for full FT — but only 11% for sparse memory-layer finetuning ([arXiv:2510.15103](https://arxiv.org/abs/2510.15103)), so LoRA's regularization is real but not the strongest anti-forgetting tool.
+- **Natively low-bit bases (2025-08 → 2026-07).** gpt-oss (MXFP4 MoE weights), Kimi K2 Thinking (INT4 QAT), DeepSeek-V4 (FP4-QAT experts) and Kimi K3 (MXFP4 release) mean the QLoRA configuration — bf16 adapters over a frozen 4-bit base — is increasingly the *native* format rather than a post-hoc compression, with the base already trained to tolerate its quantization.
 
 ## Interview Angles
 > 💡 **What labs actually ask:**
@@ -51,9 +58,10 @@ Only $A$ and $B$ are trained ($W_0$ frozen). Trainable params drop from $dk$ to 
 - **"When does LoRA fail vs full fine-tuning?"** Large capability/knowledge shifts exceed low-rank capacity.
 - **"What problem does DoRA / LoRA+ solve?"** DoRA: magnitude/direction decomposition closes the gap at low rank; LoRA+: different LRs for A vs B improve convergence.
 - **"How do you serve many LoRA adapters efficiently?"** Shared base + batched multi-adapter kernels (S-LoRA/Punica).
+- **"Why is LoRA's optimal LR ~10× higher, and why does rank-1 work for RL?"** A common explanation: with $B=0$ init and $\alpha/r$ scaling, the effective update to $W$ starts tiny, so larger steps are needed to move it at full-FT speed; RL's ~1 bit/episode information content fits in a rank-1 update.
 
 ## Open Problems
-Predicting the **minimal rank** for a task and *when* LoRA matches full fine-tuning is unsolved. Robust **composition** of multiple adapters (LoRA arithmetic) without interference, optimal initialization, and understanding LoRA's regularization/forgetting tradeoff theoretically are active research areas.
+Predicting the **minimal rank** for a task and *when* LoRA matches full fine-tuning is now partially explained by capacity arguments but not solved. Robust **composition** of multiple adapters (LoRA arithmetic) without interference, optimal initialization, LoRA on natively low-bit and MoE bases, and understanding LoRA's regularization/forgetting tradeoff theoretically are active research areas.
 
 ## References
 - Hu, E. et al. (2021). *LoRA.* arXiv:2106.09685.
@@ -61,3 +69,5 @@ Predicting the **minimal rank** for a task and *when* LoRA matches full fine-tun
 - Liu, S.-Y. et al. (2024). *DoRA.* arXiv:2402.09353.
 - Hayou, S. et al. (2024). *LoRA+.* arXiv:2402.12354.
 - Sheng, Y. et al. (2023). *S-LoRA.* arXiv:2311.03285.
+- Thinking Machines Lab (2025). *LoRA Without Regret.* Blog post.
+- Lin, J. et al. (2025). *Continual Learning via Sparse Memory Finetuning.* arXiv:2510.15103.

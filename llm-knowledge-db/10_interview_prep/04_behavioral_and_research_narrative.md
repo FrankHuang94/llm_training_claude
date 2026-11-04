@@ -1,6 +1,6 @@
 # Behavioral and Research Narrative
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Related Files:** [Lab Comparison Matrix](../08_lab_roadmaps/06_lab_comparison_matrix.md) · [Frontier Open Problems](../09_emerging_frontiers/05_frontier_open_problems.md) · [Paper Discussion Questions](02_paper_discussion_questions.md)
 
 ## Overview
@@ -19,17 +19,21 @@ Technical brilliance gets you to the onsite; **narrative and judgment** get you 
 **Show research taste.** Explain *why* you chose the problem, what you'd do with more compute/time, and what you got wrong. Labs hire for judgment about *what's worth working on*, not just execution.
 
 ## "What Excites You Most in Current LLM Research?"
-This near-universal question tests awareness and genuine interest. A strong answer: **pick a specific frontier**, explain the **key open problem** and recent evidence on both sides, and connect it to **what you'd contribute**. Draw from [Frontier Open Problems](../09_emerging_frontiers/05_frontier_open_problems.md): reasoning robustness, scalable oversight, interpretability, sample efficiency, agents/long-horizon planning, efficient architectures. Avoid generic hype ("AGI is exciting"); show you track real papers and have an opinion.
+This near-universal question tests awareness and genuine interest. A strong answer: **pick a specific frontier**, explain the **key open problem** and recent evidence on both sides, and connect it to **what you'd contribute**. Draw from [Frontier Open Problems](../09_emerging_frontiers/05_frontier_open_problems.md): reasoning robustness, scalable oversight, interpretability, sample efficiency, agents/long-horizon planning, efficient architectures. Topics that read as *current* in late 2026: RL compute scaling and objective design (ScaleRL, GSPO/CISPO), training–inference numerics, environment scaling for agentic RL, on-policy distillation, sparse/hybrid attention for 1M context, FP4 training, eval awareness and benchmark validity, reward hacking → emergent misalignment, CoT monitorability, automated alignment research. Avoid generic hype ("AGI is exciting"); show you track real papers and have an opinion.
 
 **Template:** *"I'm most excited by [specific area, e.g., RL for reasoning]. The open question is [e.g., whether RLVR creates new reasoning or amplifies latent ability]. Recent work like [R1 / GSM-Symbolic] suggests [evidence]. I'd want to work on [concrete direction], which connects to my PhD work on [X]."*
 
+**2026 example:** *"I'm most excited by making long-horizon agentic RL predictable and safe. ScaleRL shows RL curves are sigmoidal and forecastable from early compute, but the asymptote is set by environments and midtraining, and reward hacking in coding environments generalized to broad misalignment. I'd work on environment design plus hack detection that holds up on naturally arising hacks, which connects to my PhD work on [X]."*
+
 ## "Why This Lab?" — Tailoring
 Use [Lab Comparison Matrix](../08_lab_roadmaps/06_lab_comparison_matrix.md) to ground a *specific*, non-generic answer:
-- **Anthropic:** alignment/interpretability mission, Constitutional AI, scalable oversight, safety-first.
-- **OpenAI:** reasoning + inference-time scaling, shipping at scale, RL/post-training.
-- **Google DeepMind:** TPU/JAX, multimodal, long context, RL/search, scientific reasoning.
-- **Meta:** open research, PyTorch/systems, efficient architectures.
-- **DeepSeek/Mistral:** efficiency, systems innovation, open reproducibility.
+- **Anthropic:** alignment/interpretability mission, Constitutional AI (rewritten constitution, 2026-01), **RSP v3** (2026-02: Risk Reports every 3–6 months with external review, public Frontier Safety Roadmap), restricted Mythos-class releases (Project Glasswing; Fable/Mythos same-weights tiers), interpretability used operationally (Constitutional Classifiers++, white-box eval-awareness audits), automated alignment research, long-horizon agents (Claude Code, Agent SDK).
+- **OpenAI:** reasoning + inference-time scaling, long-horizon agentic RL (Codex, native computer use since GPT-5.4), shipping at scale (GPT-6 Astra/Sol/Luna), **Preparedness Framework** (Astra the first "Critical" cyber rating; Daybreak trusted access), CoT-monitorability and confessions research, gpt-oss open weights, multi-vendor compute (NVIDIA, AMD, Broadcom, Cerebras).
+- **Google DeepMind:** TPU/JAX (Ironwood; TPU 8t/8i split), Gemini 3.x and Deep Think (IMO 2025 gold), multimodal and world models (Genie 3, Veo 3), long context and learned memory (Titans/ATLAS/HOPE), **Frontier Safety Framework v3**, robotics (Gemini Robotics 2); new leadership structure since 2026-08.
+- **Meta:** 2026 shift from open Llama to the **closed Muse** family from Meta Superintelligence Labs (Muse Spark, Muse Wonder) — frame interest around frontier agentic models and MSL's compute, while FAIR still does open research (V-JEPA 2, memory layers, PyTorch/systems). Don't pitch "open weights" as Meta's identity anymore.
+- **DeepSeek / Moonshot / Qwen / Zhipu:** architecture and efficiency innovation in the open (DSA → CSA/HCA, KDA hybrids, MuonClip, mHC, FP4 QAT), trillion-parameter open MoEs, async RL infra (slime).
+- **Mistral:** European open-weight frontier (Mistral Large 4, ~1.05T MoE, open weights 2026-10; described as the top open model outside China), Apache-licensed Mistral 3 family.
+- **NVIDIA (research):** fully open models with data and recipes (Nemotron 3 Mamba-MoE hybrids, NVFP4 pretraining), hardware–software co-design.
 Reference **specific papers/products** of theirs and tie them to your interests/skills. Generic answers ("you're the best lab") are a red flag.
 
 ## Common Behavioral Questions (and how to approach)
@@ -38,6 +42,8 @@ Reference **specific papers/products** of theirs and tie them to your interests/
 - **"A project that failed."** Demonstrate honest reflection and what you learned/changed — labs value calibrated self-assessment (it mirrors good research and good alignment thinking).
 - **"How do you prioritize / handle ambiguity?"** Show structured thinking and bias toward high-impact, tractable work.
 - **"Walk me through your most impactful paper."** See the 3-level pitch; be ready for deep technical drilling.
+- **"Tell me about a time you made a judgment call with safety or misuse implications."** (Increasingly common as labs gate dual-use capability.) Show you weighed benefit vs risk, consulted others, and documented the decision — e.g., responsible disclosure, withholding a dataset, adding an eval.
+- **"How do you use AI tools in your own research?"** Labs now run large numbers of internal agents; show you use them productively *and* verify their output (tests, ablations, reading the code).
 
 ## Questions to Ask Them (you should have several)
 Thoughtful questions signal seriousness: team's current open problems, how research vs product priorities are balanced, compute access, how ideas move from research to deployment, mentorship/collaboration culture, and the lab's view on a specific open problem you care about.
@@ -48,6 +54,7 @@ Thoughtful questions signal seriousness: team's current open problems, how resea
 - Trash-talking competitors or prior collaborators.
 - No awareness of limitations/failures; no opinion on open problems.
 - Safety-dismissiveness at safety-focused labs (or vice versa) — read the room.
+- Stale framing: citing 2024-era facts as current (e.g., "Meta is the open-weights lab," "SWE-bench Verified is the coding benchmark," "200K context is large").
 
 ## Interview Angles
 > 💡 **What labs actually probe:**
@@ -63,6 +70,7 @@ Thoughtful questions signal seriousness: team's current open problems, how resea
 - [ ] 3–4 STAR stories (hard problem, disagreement, failure, leadership/initiative).
 - [ ] 5+ thoughtful questions per lab.
 - [ ] Re-read 2–3 of the lab's recent papers and form an opinion on each.
+- [ ] Read the lab's current safety framework (RSP v3 / Preparedness / FSF) and latest system card; have one specific question about it.
 
 ## References
 This file is guidance, not research; see the linked roadmap and open-problems files for the substantive content to draw on.
