@@ -1,0 +1,108 @@
+/* Print stylesheet for the Chinese LLM knowledge database PDF (A4, Chromium). */
+:root {
+  --ink: #1d1d1f;
+  --muted: #5f6368;
+  --accent: #1a4f8b;
+  --accent-soft: #e8eff8;
+  --rule: #c9d3df;
+  --code-bg: #f5f6f8;
+  --serif: "Noto Serif CJK SC", "Noto Serif", "STIX Two Text", serif;
+  --sans: "Noto Sans CJK SC", "Noto Sans", "DejaVu Sans", sans-serif;
+  --mono: "DejaVu Sans Mono", "Noto Sans Mono CJK SC", monospace;
+}
+@page { size: A4; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0; color: var(--ink); background: #fff;
+  font-family: var(--serif); font-size: 10.2pt; line-height: 1.78;
+  text-align: justify; text-justify: auto; line-break: strict;
+  font-kerning: normal; orphans: 2; widows: 2;
+}
+a { color: var(--accent); text-decoration: none; }
+p { margin: 0 0 0.62em; }
+strong { font-family: var(--sans); font-weight: 700; font-size: 0.96em; }
+em { font-style: normal; color: #333; text-emphasis: none; }
+ul, ol { margin: 0.2em 0 0.7em; padding-left: 1.6em; }
+li { margin: 0.18em 0; }
+li > p { margin: 0 0 0.3em; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 1.2em 0; }
+math { font-family: "STIX Math", "Latin Modern Math", math; font-size: 1.04em; }
+math[display="block"] { margin: 0.7em 0; overflow-x: hidden; }
+
+/* ---------- headings ---------- */
+h1, h2, h3, h4, h5 { font-family: var(--sans); color: var(--ink); line-height: 1.35;
+  text-align: left; break-after: avoid; page-break-after: avoid; }
+h1.chapter {
+  break-before: page; page-break-before: always;
+  margin: 62mm 0 0; padding-top: 6mm; border-top: 3px solid var(--accent);
+  font-size: 25pt; font-weight: 700; letter-spacing: 0.02em;
+}
+.chapter-folder { font-family: var(--mono); color: var(--muted); font-size: 10pt; margin-top: 4mm; }
+h1.front { break-before: page; font-size: 19pt; margin: 0 0 6mm; padding-bottom: 3mm;
+  border-bottom: 2px solid var(--accent); }
+h2.topic {
+  break-before: page; page-break-before: always;
+  font-size: 17pt; font-weight: 700; color: var(--accent);
+  margin: 0 0 4mm; padding-bottom: 2.5mm; border-bottom: 1.5px solid var(--accent);
+}
+h2 { font-size: 14pt; margin: 1.3em 0 0.5em; }
+h3 { font-size: 12.2pt; margin: 1.35em 0 0.45em; padding-left: 2.6mm;
+  border-left: 3.5px solid var(--accent); }
+h4 { font-size: 10.8pt; margin: 1.1em 0 0.35em; }
+h5, h6 { font-size: 10.2pt; margin: 1em 0 0.3em; }
+
+/* ---------- blockquotes: metadata boxes & interview callouts ---------- */
+blockquote {
+  margin: 0.6em 0 1em; padding: 2.6mm 4mm; background: var(--accent-soft);
+  border-left: 3px solid var(--accent); border-radius: 0 3px 3px 0;
+  font-family: var(--sans); font-size: 8.6pt; line-height: 1.65; color: #2b2f36;
+  break-inside: avoid;
+}
+blockquote p { margin: 0.15em 0; }
+blockquote strong { font-size: 1em; }
+
+/* ---------- code ---------- */
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg);
+  padding: 0.05em 0.3em; border-radius: 2px; }
+pre { font-family: var(--mono); background: var(--code-bg); border: 1px solid #e3e6ea;
+  border-radius: 3px; padding: 3mm 3.5mm; font-size: 7.9pt; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word; text-align: left; break-inside: auto; }
+pre code { background: none; padding: 0; font-size: 1em; }
+
+/* ---------- tables ---------- */
+table { width: 100%; border-collapse: collapse; margin: 0.8em 0 1.1em;
+  font-family: var(--sans); font-size: 7.6pt; line-height: 1.5; text-align: left; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { background: var(--accent); color: #fff; font-weight: 700; }
+th, td { border: 1px solid var(--rule); padding: 1.6mm 2mm; vertical-align: top;
+  word-break: break-word; }
+tbody tr:nth-child(even) td { background: #f7f9fc; }
+th strong { font-size: 1em; }
+
+/* ---------- table of contents ---------- */
+.toc-title { font-family: var(--sans); font-size: 19pt; font-weight: 700; margin: 0 0 6mm;
+  padding-bottom: 3mm; border-bottom: 2px solid var(--accent); }
+.toc a { display: flex; align-items: baseline; color: var(--ink); text-decoration: none;
+  break-inside: avoid; }
+.toc .t { flex: 0 1 auto; }
+.toc .dots { flex: 1 1 auto; border-bottom: 1px dotted #9aa4b1; margin: 0 2mm; transform: translateY(-0.28em); min-width: 6mm; }
+.toc .p { flex: 0 0 auto; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.toc-front, .toc-chapter { font-family: var(--sans); font-weight: 700; font-size: 10.4pt;
+  margin-top: 3.2mm; color: var(--accent); }
+.toc-chapter .p, .toc-front .p { color: var(--accent); }
+.toc-topic { font-size: 9.2pt; padding-left: 7mm; margin-top: 0.6mm; color: #2b2f36; }
+
+/* ---------- cover ---------- */
+.cover { height: 297mm; box-sizing: border-box; padding: 58mm 24mm 24mm;
+  background: linear-gradient(180deg, #0f2f57 0%, #1a4f8b 62%, #ffffff 62.1%);
+  font-family: var(--sans); color: #fff; position: relative; }
+.cover-top { font-size: 11pt; letter-spacing: 0.3em; opacity: 0.85; }
+.cover-title { font-size: 38pt; line-height: 1.25; margin: 10mm 0 6mm; color: #fff;
+  border: 0; font-weight: 700; letter-spacing: 0.04em; }
+.cover-sub { font-size: 13pt; opacity: 0.92; }
+.cover-rule { width: 32mm; height: 3px; background: #9cc3ef; margin: 12mm 0 0; }
+.cover-note { position: absolute; left: 24mm; right: 24mm; bottom: 46mm; color: #333;
+  font-size: 10.5pt; line-height: 1.8; }
+.cover-date { position: absolute; left: 24mm; bottom: 34mm; color: var(--accent);
+  font-size: 11pt; font-weight: 700; }
