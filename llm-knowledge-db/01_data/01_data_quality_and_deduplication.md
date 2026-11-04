@@ -1,6 +1,6 @@
 # Data Quality and Deduplication
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Related Files:** [Data Collection & Curation](00_data_collection_and_curation.md) · [Synthetic Data Generation](04_synthetic_data_generation.md) · [Information Theory Basics](../00_foundations/06_information_theory_basics.md)
 > **Key Papers:** Lee et al. 2022 "Deduplicating Training Data Makes LMs Better" ([arXiv:2107.06499](https://arxiv.org/abs/2107.06499)) · Wenzek et al. 2019 CCNet ([arXiv:1911.00359](https://arxiv.org/abs/1911.00359)) · Gunasekar et al. 2023 phi-1 "Textbooks Are All You Need" ([arXiv:2306.11644](https://arxiv.org/abs/2306.11644)) · Abbas et al. 2023 SemDeDup ([arXiv:2303.09540](https://arxiv.org/abs/2303.09540))
 
@@ -27,16 +27,23 @@ This file covers the algorithms (MinHash LSH, suffix arrays, semantic dedup) and
 - **Repetition effects.** Some repetition helps (data-constrained scaling), but verbatim duplicates cause memorization and privacy leakage.
 
 ## Solutions & Current Best Practices
-The standard stack: **exact + MinHash-LSH fuzzy dedup** (global, cross-snapshot), followed by **model-based quality classification** (DCLM/FineWeb-Edu), optional **semantic dedup**, plus PII and toxicity filters. Repetition is then *controlled* (Muennighoff et al.: up to ~4 epochs of high-quality data is near-free) rather than eliminated. A final **midtraining/annealing** stage upweights the very highest-quality subset (math, code, textbooks).
+The standard stack: **exact + MinHash-LSH fuzzy dedup** (global, cross-snapshot), followed by **model-based quality classification** (DCLM/FineWeb-Edu), optional **semantic dedup**, plus PII and toxicity filters. Repetition is then *controlled* (Muennighoff et al.: up to ~4 epochs of high-quality data is near-free) rather than eliminated. A final **midtraining/annealing** stage upweights the very highest-quality subset (math, code, textbooks). Increasingly, low-scoring but non-junk documents are **rephrased** rather than discarded (FinePhrase, SynPro), and dedup counts are reused as an upsampling signal rather than only a deletion criterion (FineWeb2 "rehydration").
 
 ## Lab Perspectives
 - **Meta** (Llama 3) applied aggressive dedup + quality classifiers and reported large gains.
 - **Microsoft** (phi-series) is the standard-bearer for the **"textbook-quality data"** thesis: small models trained on curated/synthetic high-quality data punch far above their weight (phi-1, phi-1.5, phi-2, phi-3).
-- **HuggingFace/AllenAI** open the methodology (FineWeb-Edu, Dolma).
-- **OpenAI/Anthropic/Google** keep specifics closed but clearly rely on heavy classifier-based curation and licensed high-quality corpora.
+- **HuggingFace/AllenAI** open the methodology (FineWeb-Edu, Dolma, FineWeb2, Dolma 3); NVIDIA released Nemotron 3 pretraining data and recipes.
+- **OpenAI/Anthropic/Google** keep specifics closed but clearly rely on heavy classifier-based curation and licensed high-quality corpora. Anthropic and OpenAI now also publish on *environment* quality for RL: OpenAI retired SWE-bench Verified over flawed tests, and Anthropic showed that hackable coding environments induce broad misalignment.
 
-## Latest Developments (2023–2026)
+## Latest Developments (2023–Nov 2026)
 The **"quality > quantity"** view gained strong evidence: phi-series and DCLM showed curated/filtered data dramatically improves quality-per-token. **LLM-as-annotator** quality scoring (FineWeb-Edu) replaced hand-tuned heuristics. Debate persists over whether the phi approach **overfits benchmarks** (its synthetic data may resemble eval distributions) versus genuinely improving capability — a live contamination concern.
+
+**Mid-2025 → Nov 2026 update:**
+- **Dedup-informed upsampling (2025-06; arXiv:2506.20920).** FineWeb2 adapts dedup and filtering thresholds per language across >1,000 languages and then "rehydrates": documents are upsampled according to how many duplicates they had, on the premise that duplicate-cluster size carries quality signal. Global dedup + selective re-weighting replaces "dedup then forget".
+- **Rephrasing as a quality transform (2026-04; arXiv:2604.13977).** FinePhrase (>1T generated tokens) finds that rewriting web text into structured targets — tables, math problems, FAQs, tutorials — beats both curated web data and earlier synthetic methods, and that generators above ~1B parameters add nothing; 486B tokens released. Quality improvement is cheap enough to apply to the bulk of the corpus.
+- **Learned rephrasers with faithfulness rewards (2026-05; arXiv:2605.17849).** SynPro trains rephrasers with RL rewarded for quality, faithfulness to the source and data influence, reporting 3.7–5.2× the effective tokens of plain repetition in a data-constrained regime — reframing "quality vs quantity" as "how much quality can be added per source token".
+- **Quality of RL data and environments (2025-11 → 2026-02).** Hackable coding environments (e.g., `sys.exit(0)` passing tests) caused reward hacking that generalized to sabotage and alignment faking (arXiv:2511.18397); OpenAI's audit of SWE-bench Verified found ≥59.4% of audited hard problems had flawed tests. Test-suite quality is now a data-quality problem with safety consequences.
+- **Timing interacts with quality (2025-10; arXiv:2510.14865).** When high-quality specialized data enters training interacts with its mixture weight: early introduction tolerates high weight, late introduction needs low weight; gains are largest for math and code (see [Data Mixing](03_data_mixing_and_curriculum.md)).
 
 ## Interview Angles
 > 💡 **What labs actually ask:**
@@ -44,6 +51,7 @@ The **"quality > quantity"** view gained strong evidence: phi-series and DCLM sh
 - **"Why does deduplication improve models?"** Less memorization, more effective tokens, less wasted compute, better eval validity (Lee et al.).
 - **"Quality vs quantity — how do you decide filter strength?"** Depends on compute budget vs data availability; cite phi vs Chinchilla.
 - **"Risks of model-based quality filters?"** Style/dialect bias, benchmark contamination, distribution narrowing.
+- **"Filter or rephrase?"** Discarding low-score documents loses tokens; rephrasing (small generator, structured formats, faithfulness checks) keeps the content and raises quality — but risks homogenized style and hallucinated facts, so verify faithfulness.
 
 ## Open Problems
 There is no agreed metric for "data quality" — classifiers are proxies. Whether the phi "textbook" gains generalize beyond benchmarks (vs reflecting contamination) is contested. The optimal dedup aggressiveness, the safe limit of repetition, and how to filter without amplifying bias are unsolved.
@@ -54,3 +62,5 @@ There is no agreed metric for "data quality" — classifiers are proxies. Whethe
 - Gunasekar, S. et al. (2023). *Textbooks Are All You Need (phi-1).* arXiv:2306.11644.
 - Abbas, A. et al. (2023). *SemDeDup.* arXiv:2303.09540.
 - Muennighoff, N. et al. (2023). *Scaling Data-Constrained LMs.* arXiv:2305.16264.
+- Penedo, G. et al. (2025). *FineWeb2: One Pipeline to Scale Them All.* arXiv:2506.20920.
+- MacDiarmid, M. et al. (2025). *Natural Emergent Misalignment from Reward Hacking in Production RL.* arXiv:2511.18397.

@@ -1,6 +1,6 @@
 # Synthetic Data Generation
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Related Files:** [Data Quality & Deduplication](01_data_quality_and_deduplication.md) · [Knowledge Distillation](../06_efficiency/03_knowledge_distillation.md) · [Constitutional AI & RLAIF](../03_posttraining/07_constitutional_AI_and_RLAIF.md)
 > **Key Papers:** Wang et al. 2022 Self-Instruct ([arXiv:2212.10560](https://arxiv.org/abs/2212.10560)) · Xu et al. 2023 WizardLM/Evol-Instruct ([arXiv:2304.12244](https://arxiv.org/abs/2304.12244)) · Mukherjee et al. 2023 Orca ([arXiv:2306.02707](https://arxiv.org/abs/2306.02707)) · Shumailov et al. 2024 Model Collapse ([Nature](https://www.nature.com/articles/s41586-024-07566-y))
 
@@ -28,24 +28,36 @@ As the supply of high-quality human-written text approaches exhaustion (the "dat
 - **Bias amplification.** Generators propagate and concentrate their own biases.
 
 ## Solutions & Current Best Practices
-The consensus: **synthetic + real data mixed**, never synthetic-only (collapse avoidance). Use **verification/grounding** — execute code, check math against solvers, use verifiable rewards (see [GRPO & RLVR](../03_posttraining/06_GRPO_and_RLVR.md)), or filter with reward models / LLM judges. **Maximize diversity** via varied prompts, personas, seed documents, and evolution operators. **Rephrasing real data** (WRAP: "Web Rephrase Augmented Pre-training") grounds synthetic data in real content while improving quality. Strict **decontamination** against evals is mandatory.
+The consensus: **synthetic + real data mixed**, never synthetic-only (collapse avoidance). Use **verification/grounding** — execute code, check math against solvers, use verifiable rewards (see [GRPO & RLVR](../03_posttraining/06_GRPO_and_RLVR.md)), or filter with reward models / LLM judges. **Maximize diversity** via varied prompts, personas, seed documents, and evolution operators. **Rephrasing real data** (WRAP: "Web Rephrase Augmented Pre-training"; FinePhrase and SynPro in 2026) grounds synthetic data in real content while improving quality — structured target formats and small (~1B) generators suffice. For post-training, **on-policy distillation** (student samples, teacher grades each token) has become a standard dense-supervision stage alongside offline teacher-trace SFT. Strict **decontamination** against evals is mandatory.
 
 ## Lab Perspectives
 - **Microsoft** champions synthetic textbook data (phi) and rephrasing.
-- **OpenAI/Anthropic** use heavy AI-feedback and self-generated data in post-training (RLHF/RLAIF, Constitutional AI); reasoning models generate and filter their own CoT.
+- **OpenAI/Anthropic** use heavy AI-feedback and self-generated data in post-training (RLHF/RLAIF, Constitutional AI); reasoning models generate and filter their own CoT. Both now also *defend* their outputs against third-party distillation (Anthropic: preserved, account-bound thinking and distillation classifiers that route requests to Opus 4.8; OpenAI's o-series has long hidden raw CoT).
 - **Google DeepMind** uses self-generated reasoning data (e.g., for AlphaProof/AlphaGeometry, formal-math synthesis) and distillation into Gemma/Gemini Flash.
 - **Meta** (Llama 3) used substantial synthetic data for code, math, long-context, and safety, with execution-based verification.
-- **DeepSeek** distilled R1 reasoning into smaller models and used RLVR-generated reasoning data.
+- **DeepSeek** distilled R1 reasoning into smaller models and used RLVR-generated reasoning data; DeepSeekMath-V2 trains an LLM proof verifier and uses it as the reward for a self-correcting proof generator.
+- **Qwen and other open labs** use multi-teacher on-policy distillation to merge domain experts (Qwen3, KAT-Coder-V2.5) and synthesize agentic RL environments at scale.
 
-## Latest Developments (2023–2026)
+## Latest Developments (2023–Nov 2026)
 Synthetic data is now load-bearing in pretraining (phi, rephrased web) and reasoning (R1-style self-generated, verified CoT). **Verifier-grounded generation** (math/code with executable checks) sidesteps collapse by injecting real signal. Theoretical work refines when synthetic data helps vs collapses (accumulating real data, or mixing, avoids collapse). **Self-improvement loops** (STaR, ReST, self-rewarding LMs) iteratively generate→filter→train.
+
+**Mid-2025 → Nov 2026 update:**
+- **Controlled rephrasing study at >1T tokens (2026-04; arXiv:2604.13977).** FinePhrase finds structured target formats (tables, math problems, FAQs, tutorials) beat curated web data and prior synthetic methods, and generators larger than ~1B parameters add nothing — synthetic pretraining data is a *format* problem more than a *teacher-strength* problem. 486B tokens released.
+- **RL-trained rephrasers (2026-05; arXiv:2605.17849).** SynPro rewards a rephraser for quality, faithfulness and measured data influence, reporting 3.7–5.2× the effective tokens of repetition at 10% of Chinchilla data; its framing — organic data is under-used, not exhausted — reorients "the data wall" debate.
+- **Self-play without external data (2025-05 → 2026-02).** Absolute Zero (arXiv:2505.03335) proposes code-reasoning tasks that maximize its own learnability and solves them against a code executor; SPICE (arXiv:2510.24684) grounds challenger/reasoner self-play in a document corpus to avoid the collapse seen without grounding; DARC (arXiv:2601.13761) stabilizes proposer/solver self-evolution (+10.9 points across nine benchmarks).
+- **Synthetic environments, not just synthetic text (2026).** Agentic RL is bottlenecked by environments: SWE-Master (arXiv:2602.03411), KAT-Coder-V2.5 (arXiv:2607.05471; agent-built verifiable repo tasks, harness randomization, multi-teacher OPD) and CodeMidas (arXiv:2609.22068; environments synthesized from existing code).
+- **Learned verifiers and rubrics as label generators (2025-07 → 2026-02).** Rubrics as Rewards (arXiv:2507.17746) scores instance-specific rubric checklists with an LLM judge (up to +31% relative on HealthBench); DeepSeekMath-V2 (arXiv:2511.22570) scales verification compute to label hard proofs (self-reported IMO 2025 gold-level, 118/120 Putnam 2024); Rubric-ARM (arXiv:2602.01511) co-trains rubric generator and judge.
+- **On-policy distillation (2025-10 onward).** Dense per-token reverse-KL supervision on the student's own samples reportedly reaches teacher-level reasoning at ~1/10 the GPU-hours of RL; fixes for teacher-signal decay on long prefixes (arXiv:2605.30833) and mode-seeking (arXiv:2603.07079) followed.
+- **Synthetic documents as an experimental instrument (2025-11; arXiv:2511.18397).** Anthropic seeded a pretrained model with synthetic documents describing reward hacks, then ran production coding RL — showing synthetic-document finetuning can install knowledge that later drives emergent misalignment. Synthetic data shapes dispositions, not just skills.
+- **Teacher traces are getting scarcer.** Preserved/account-bound thinking (Opus 5.5, Sonnet 5.5), distillation classifiers and Anthropic's Oct 2026 post on distillation attacks make frontier reasoning traces harder to harvest for third-party synthetic pipelines.
 
 ## Interview Angles
 > 💡 **What labs actually ask:**
 - **"What is model collapse and how do you avoid it?"** Recursive synthetic-only training degrades tails; mix with real data, verify, accumulate.
 - **"How would you generate high-quality math/code SFT data?"** Generate + execute/verify, keep only correct traces (rejection sampling), diversify.
 - **"Self-Instruct/Alpaca pipeline — describe it."** Seed → generate instructions → generate responses → filter → fine-tune.
-- **"Risks of distilling a frontier model?"** Contamination, IP/ToS, inheriting teacher biases and ceilings.
+- **"Risks of distilling a frontier model?"** Contamination, IP/ToS, inheriting teacher biases and ceilings — and, in 2026, active anti-distillation defenses on the teacher side.
+- **"Why would a 1B rephraser be as good as a 70B one for pretraining data?"** The gain comes from re-formatting and densifying existing knowledge, not from injecting the teacher's knowledge; target format and faithfulness to the source matter more than generator size (consistent with FinePhrase's finding that >1B generators add nothing).
 
 ## Open Problems
 The fundamental limits of self-improvement (can a model exceed its own/teacher's ceiling without external signal?) are open. Reliable, scalable verification for *open-ended* (non-verifiable) domains is unsolved. The precise conditions for collapse vs benefit, and the long-run epistemic risk of a web increasingly filled with synthetic text, remain active concerns.
@@ -56,3 +68,6 @@ The fundamental limits of self-improvement (can a model exceed its own/teacher's
 - Mukherjee, S. et al. (2023). *Orca.* arXiv:2306.02707.
 - Gunasekar, S. et al. (2023). *Textbooks Are All You Need (phi-1).* arXiv:2306.11644.
 - Shumailov, I. et al. (2024). *AI Models Collapse When Trained on Recursively Generated Data.* Nature.
+- Zhao, A. et al. (2025). *Absolute Zero: Reinforced Self-play Reasoning with Zero Data.* arXiv:2505.03335.
+- Gunjal, A. et al. (2025). *Rubrics as Rewards.* arXiv:2507.17746.
+- DeepSeek-AI (2025). *DeepSeekMath-V2.* arXiv:2511.22570.

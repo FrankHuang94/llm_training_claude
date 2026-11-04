@@ -1,13 +1,13 @@
 # Positional Encoding
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Related Files:** [Transformer Architecture](00_transformer_architecture.md) · [Attention Mechanisms](01_attention_mechanisms.md) · [Context Window Extension](../06_efficiency/06_context_window_extension.md)
 > **Key Papers:** Vaswani et al. 2017 (sinusoidal) · Su et al. 2021 RoFormer/RoPE ([arXiv:2104.09864](https://arxiv.org/abs/2104.09864)) · Press et al. 2021 ALiBi ([arXiv:2108.12409](https://arxiv.org/abs/2108.12409)) · Peng et al. 2023 YaRN ([arXiv:2309.00071](https://arxiv.org/abs/2309.00071)) · Ding et al. 2024 LongRoPE ([arXiv:2402.13753](https://arxiv.org/abs/2402.13753))
 
 ## Overview
 Self-attention is permutation-equivariant: shuffle the input tokens and the output shuffles identically, because the attention operation contains no notion of order. Positional encoding injects sequence-order information so the model can distinguish "dog bites man" from "man bites dog." The design space has evolved from *absolute* encodings added to embeddings toward *relative* and *rotary* schemes that encode the distance between tokens directly in the attention computation — a shift driven largely by the need for **length extrapolation** (using a context longer than seen in training).
 
-The dominant modern choice is **Rotary Position Embedding (RoPE)**, used by LLaMA, Mistral, Qwen, DeepSeek, Gemma, and most 2023–2026 models. Understanding why RoPE won, and how it is stretched for long context (YaRN, LongRoPE), is core foundational knowledge.
+The dominant modern choice is **Rotary Position Embedding (RoPE)**, used by LLaMA, Mistral, Qwen, DeepSeek, Gemma, and most 2023–2026 models — although 2025–26 hybrid architectures increasingly let recurrent (linear-attention/SSM) layers carry order and leave some attention layers position-free (NoPE). Understanding why RoPE won, and how it is stretched for long context (YaRN, LongRoPE), is core foundational knowledge.
 
 ## Core Concepts
 **Sinusoidal (absolute).** The original Transformer adds fixed sinusoids to token embeddings:
@@ -29,16 +29,24 @@ This gives relative-position awareness "for free" inside attention, preserves ve
 - **Interaction with attention sinks.** Initial tokens act as attention sinks; positional schemes interact with this in nontrivial ways (StreamingLLM).
 
 ## Solutions & Current Best Practices
-**RoPE is the default**, with **YaRN or NTK-aware scaling** for context extension and a short long-context fine-tuning phase. Long-context recipes (Llama 3.1 128K, Qwen, Gemini) increase the RoPE base frequency ("theta scaling") and anneal on long documents. ALiBi remains a respected alternative where simplicity and extrapolation matter more than peak quality.
+**RoPE is the default**, with **YaRN or NTK-aware scaling** for context extension and a short long-context fine-tuning phase. Long-context recipes (Llama 3.1 128K, Qwen, Gemini) increase the RoPE base frequency ("theta scaling") and anneal on long documents. In 2026 open flagships, extension is staged: native windows of ~256K (Qwen3-Next, Qwen3.8 at 262,144) extended toward ~1M, or multi-stage length curricula (DeepSeek-V4 reportedly trains dense at 4K→16K and enables sparse attention at 64K before reaching 1M). ALiBi remains a respected alternative where simplicity and extrapolation matter more than peak quality.
 
 ## Lab Perspectives
 - **Meta** (LLaMA) and **Mistral** standardized RoPE; Llama 3.1 used RoPE base/theta scaling for 128K.
-- **Google DeepMind** pushes the longest contexts (Gemini 1.5: 1–2M tokens), with proprietary positional/architectural methods plus retrieval.
+- **Google DeepMind** pioneered production 1–2M windows (Gemini 1.5) with proprietary positional/architectural methods plus retrieval; by 2026 ~1M is table stakes rather than a differentiator (Claude Opus 4.6 1M beta, GPT-5.4/GPT-6 Astra ~1.05M, DeepSeek-V4, Kimi K3, MiniMax M3, Nemotron 3, Meta Muse Wonder reportedly 1M).
 - **Microsoft** produced LongRoPE for extreme extension.
 - **DeepSeek** integrates RoPE with MLA via a decoupled "RoPE-carrying" key component.
+- **Moonshot** reportedly uses NoPE in Kimi K3's 24 MLA layers, relying on the 69 interleaved KDA (delta-rule) layers to supply order information.
 
-## Latest Developments (2023–2026)
+## Latest Developments (2023–Nov 2026)
 RoPE base/theta scaling is now routine for long context. **LongRoPE2** and per-dimension search refine 1M+ contexts. There is renewed interest in **NoPE** (no positional encoding) for decoder-only models — causal masking alone can encode position, and NoPE shows surprisingly strong length generalization in some settings. Hybrid SSM/attention models inherit position handling from their attention layers.
+
+**Mid-2025 → Nov 2026 update:**
+- **Recurrence as the positional signal (2025-09 → 2026-07).** In 3:1 hybrids (Qwen3-Next, Kimi Linear arXiv:2510.26692, Kimi K3) the Gated DeltaNet/KDA layers are causal recurrences with learned decay $\alpha_t$, which encodes recency the way ALiBi's linear bias does — but data-dependently. This makes NoPE in the sparse full-attention layers viable (reported for K3's MLA layers), sidestepping RoPE extrapolation for those layers entirely.
+- **Sliding windows bound the RoPE problem.** gpt-oss (2025-08) alternates 128-token banded layers with dense layers at 128K context; MiMo-V2.5 reportedly mixes SWA and global layers 5:1 with a 128-token window at 1M context. Only the global layers see long-range positions, so only they need extension.
+- **Sinks, gates and long context (2025-05; arXiv:2505.06708).** The StreamingLLM attention sink is partly a positional phenomenon (the first token absorbs mass); a sigmoid output gate removes it (first-token mass 46.7% → 4.8%) and improves RULER by >10 points — positional robustness obtained by changing attention, not the encoding.
+- **Effective vs nominal length.** Opus 4.6 (2026-02) reports 76% on MRCR v2 8-needle at 1M vs 18.5% for Sonnet 4.5: window size is now commoditized and the discriminating metric is multi-needle retrieval at full length.
+- **Test-time training as an alternative to extrapolation (2025-12; arXiv:2512.23675).** TTT-E2E uses a sliding-window Transformer that takes next-token gradient steps on the context at test time (meta-learned initialization, only some MLPs updated); at 3B it scales with context like full attention at constant per-token latency, 2.7× faster at 128K. ATLAS (arXiv:2505.23735) reports +80% on BABILong at 10M tokens. Position beyond the window lives in weights, not encodings.
 
 ## Interview Angles
 > 💡 **What labs actually ask:**
@@ -46,9 +54,10 @@ RoPE base/theta scaling is now routine for long context. **LongRoPE2** and per-d
 - **"Derive the relative-position property of RoPE."** Show $\langle R_m q, R_n k\rangle$ depends only on $m-n$.
 - **"How do you extend a 4K model to 128K?"** Position interpolation / NTK / YaRN + theta scaling + long-context fine-tune.
 - **"What is ALiBi and when would you use it?"** Linear distance bias, strong extrapolation, no PE.
+- **"Why can a 3:1 linear/full hybrid drop RoPE from its full-attention layers?"** The recurrent layers' decay already encodes order and recency; position-free global layers then do content-based retrieval and avoid out-of-distribution rotation angles at 1M.
 
 ## Open Problems
-The mechanism of length generalization is not fully understood; why some models extrapolate and others don't lacks a complete theory. Whether explicit positional encoding is even necessary (NoPE) for decoder-only LMs is debated. Achieving true train-short/test-long generalization to millions of tokens without any fine-tuning remains unsolved.
+The mechanism of length generalization is not fully understood; why some models extrapolate and others don't lacks a complete theory. Whether explicit positional encoding is even necessary (NoPE) for decoder-only LMs is debated. Achieving true train-short/test-long generalization to millions of tokens without any fine-tuning remains unsolved, and whether hybrid NoPE designs or test-time-trained memory generalize better than RoPE scaling has not been tested head-to-head at frontier scale.
 
 ## References
 - Su, J. et al. (2021). *RoFormer: Enhanced Transformer with Rotary Position Embedding.* arXiv:2104.09864.
@@ -56,3 +65,7 @@ The mechanism of length generalization is not fully understood; why some models 
 - Chen, S. et al. (2023). *Extending Context Window via Position Interpolation.* arXiv:2306.15595.
 - Peng, B. et al. (2023). *YaRN.* arXiv:2309.00071.
 - Ding, Y. et al. (2024). *LongRoPE.* arXiv:2402.13753.
+- Kazemnejad, A. et al. (2023). *The Impact of Positional Encoding on Length Generalization in Transformers* (NoPE). arXiv:2305.19466.
+- Xiao, G. et al. (2023). *Efficient Streaming Language Models with Attention Sinks.* arXiv:2309.17453.
+- Qiu, Z. et al. (2025). *Gated Attention for Large Language Models.* arXiv:2505.06708.
+- Behrouz, A. et al. (2025). *ATLAS: Learning to Optimally Memorize the Context at Test Time.* arXiv:2505.23735.
