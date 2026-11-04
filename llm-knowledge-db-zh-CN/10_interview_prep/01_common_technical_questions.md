@@ -11,7 +11,7 @@
 $\text{Attention}(Q,K,V)=\text{softmax}(QK^\top/\sqrt{d_k})V$。$\sqrt{d_k}$ 抵消了点积方差随维度的增长（$\propto d_k$），否则 softmax 会被推入饱和、梯度很小的区域。（见[Transformer 架构](../00_foundations/00_transformer_architecture.md)。）
 
 **问：为什么分组查询注意力（GQA）能减少内存，代价是什么？**
-GQA 让若干组查询头共享 KV 头，使 **KV 缓存**缩小为原来的 $1/(h/g)$。以少量质量损失（相对完整多头注意力（MHA））换取显著的内存/吞吐量收益；质量远好于只有单个 KV 头的多查询注意力（MQA）。（见[注意力机制](../00_foundations/01_attention_mechanisms.md)。）
+GQA 让若干组查询头共享 KV 头，使 **KV 缓存**缩小 $h/g$ 倍。以少量质量损失（相对完整多头注意力（MHA））换取显著的内存/吞吐量收益；质量远好于只有单个 KV 头的多查询注意力（MQA）。（见[注意力机制](../00_foundations/01_attention_mechanisms.md)。）
 
 **问：FlashAttention 如何避免 $O(n^2)$ 内存？**
 分块（tiling）+ **在线 softmax**，在 SRAM 中以一次流式遍历完成注意力计算，而不实体化 $n\times n$ 的分数矩阵；它是 IO 感知且*精确*的，针对的是内存受限瓶颈。
