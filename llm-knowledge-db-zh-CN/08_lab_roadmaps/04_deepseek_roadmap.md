@@ -51,7 +51,7 @@ DeepSeek 是一家中国实验室（脱胎于量化基金幻方 High-Flyer），
 - **2025-09/12——DSA：** 闪电索引器（少量头、ReLU、FP8）为 MLA 选出 top-k token；分两阶段训练（先稠密预热，用 KL 使索引器与主注意力分布对齐，再进行稀疏持续训练）。索引器仍是 $O(L^2)$ 但开销很小，因此主注意力成本变为 $O(Lk)$。（arXiv:2512.02556）
 - **2025-11——DeepSeekMath-V2：** 以验证器作为奖励，并对难证明扩展验证计算——把 RLVR 推广到没有廉价真值检查器的领域。（arXiv:2511.22570）
 - **2025-12——mHC：** 把超连接的混合矩阵投影到 Birkhoff 多面体上，恢复了普通超连接所破坏的近似恒等映射；在 27B 规模上稳定。（arXiv:2512.24880）
-- **2026-04——V4（CSA + HCA）：** CSA 把每个 KV 块压缩成一个条目，再由索引器选出 top-k 压缩条目；HCA 则在压缩程度高得多的 KV 上做稠密注意力。据报道，在先以稠密方式完成 4K→16K 训练后，于 64K 阶段开启稀疏注意力；使用 Muon 优化器（嵌入/输出头/归一化层仍用 AdamW）；对路由专家做 FP4 QAT；约 32T token（二手来源）。报告编号列为 arXiv:2606.19348（HF 页面上的编号/日期不一致——需核实）。
+- **2026-04——V4（CSA + HCA）：** CSA 把每个 KV 块压缩成一个条目，再由索引器选出 top-k 压缩条目；HCA 则在压缩程度高得多的 KV 上做稠密注意力。据报道，在先以稠密方式完成 4K→16K 训练后，于 64K 阶段开启稀疏注意力；使用 Muon 优化器（嵌入/输出头/归一化层仍用 AdamW）；对路由专家做 FP4 QAT；约 32T token（二手来源）。技术报告：arXiv:2606.19348（据其 Hugging Face 模型卡）。
 - **2026-09——V4.1-Flash：** 一个带原生视觉的 552B 模型同时取代 V4-Flash 和 V4-Pro——收敛为一个高效的多模态主力模型，而非旗舰阶梯。
 
 ## 面试要点
@@ -75,4 +75,4 @@ DeepSeek 能否在出口管制下跟上下一个规模台阶（并澄清其硬�
 - DeepSeek-AI (2025). *DeepSeek-V3.2 (DeepSeek Sparse Attention).* arXiv:2512.02556.
 - DeepSeek-AI (2025). *DeepSeekMath-V2.* arXiv:2511.22570.
 - DeepSeek-AI (2025). *mHC: Manifold-Constrained Hyper-Connections.* arXiv:2512.24880.
-- DeepSeek-AI (2026). *DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence.* arXiv:2606.19348 (verify ID).
+- DeepSeek-AI (2026). *DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence.* arXiv:2606.19348 (ID as listed on its Hugging Face card).

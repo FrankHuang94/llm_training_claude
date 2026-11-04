@@ -51,7 +51,7 @@ Push **open**, **efficient** frontier models; pursue AGI via algorithmic/systems
 - **2025-09/12 — DSA:** lightning indexer (few heads, ReLU, FP8) selects top-k tokens for MLA; trained in two stages (dense warm-up aligning the indexer to the main attention via KL, then sparse continued training). The indexer is still $O(L^2)$ but cheap, so main attention cost becomes $O(Lk)$. (arXiv:2512.02556)
 - **2025-11 — DeepSeekMath-V2:** verifier-as-reward with scaled verification compute for hard proofs — RLVR extended to domains without a cheap ground-truth checker. (arXiv:2511.22570)
 - **2025-12 — mHC:** projecting hyper-connection mixing onto the Birkhoff polytope restores the identity-like mapping that plain hyper-connections break; stable at 27B. (arXiv:2512.24880)
-- **2026-04 — V4 (CSA + HCA):** CSA compresses each block of KV into one entry and the indexer selects top-k compressed entries; HCA runs dense attention over much more heavily compressed KV. Sparse attention reportedly switched on at a 64K stage after dense 4K→16K training; Muon optimizer (AdamW for embeddings/heads/norms); FP4 QAT for routed experts; ~32T tokens (secondary). Report listed as arXiv:2606.19348 (ID/date inconsistent on the HF page — verify).
+- **2026-04 — V4 (CSA + HCA):** CSA compresses each block of KV into one entry and the indexer selects top-k compressed entries; HCA runs dense attention over much more heavily compressed KV. Sparse attention reportedly switched on at a 64K stage after dense 4K→16K training; Muon optimizer (AdamW for embeddings/heads/norms); FP4 QAT for routed experts; ~32T tokens (secondary). Tech report: arXiv:2606.19348 (as listed on its Hugging Face card).
 - **2026-09 — V4.1-Flash:** a single 552B model with native vision replacing both V4-Flash and V4-Pro — consolidation toward one efficient multimodal workhorse rather than a flagship ladder.
 
 ## Interview Angles
@@ -75,4 +75,4 @@ Whether DeepSeek can keep pace at the next scale under export controls (and clar
 - DeepSeek-AI (2025). *DeepSeek-V3.2 (DeepSeek Sparse Attention).* arXiv:2512.02556.
 - DeepSeek-AI (2025). *DeepSeekMath-V2.* arXiv:2511.22570.
 - DeepSeek-AI (2025). *mHC: Manifold-Constrained Hyper-Connections.* arXiv:2512.24880.
-- DeepSeek-AI (2026). *DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence.* arXiv:2606.19348 (verify ID).
+- DeepSeek-AI (2026). *DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence.* arXiv:2606.19348 (ID as listed on its Hugging Face card).

@@ -42,7 +42,7 @@
 
 **2025年中 → 2026年11月更新：**
 - **可学习的稀疏注意力（2025-09/12）。** DeepSeek Sparse Attention 加入一个 FP8 的"闪电索引器"（lightning indexer，少量头、ReLU）为历史 token 打分，使主 MLA 注意力只在 top-$k$ 上运行；索引器本身仍是 $O(L^2)$ 但很廉价，训练方式是先用 KL 对齐的稠密预热，再做稀疏的继续训练（[arXiv:2512.02556](https://arxiv.org/abs/2512.02556)）。GLM-5（744B）采用了它（[arXiv:2602.15763](https://arxiv.org/abs/2602.15763)）。
-- **压缩稀疏注意力（2026-04）。** DeepSeek-V4 对 KV 块进行压缩（CSA），并增加重度压缩的稠密注意力（HCA）；据报道在 1M 上下文下，V4-Pro 每 token 的 FLOPs 约为 V3.2 的 27%，KV 缓存约为其 10%（报告编号列为 arXiv:2606.19348；引用前请核实）。
+- **压缩稀疏注意力（2026-04）。** DeepSeek-V4 对 KV 块进行压缩（CSA），并增加重度压缩的稠密注意力（HCA）；据报道在 1M 上下文下，V4-Pro 每 token 的 FLOPs 约为 V3.2 的 27%，KV 缓存约为其 10%（DeepSeek-V4 技术报告：arXiv:2606.19348，据其 Hugging Face 模型卡）。
 - **混合线性注意力（2025-09/10）。** Qwen3-Next 在一个 80B-A3B 的 MoE 中以 3:1 交错 Gated DeltaNet 与门控注意力，报告在 32K 以上的预填充吞吐量是 Qwen3-32B 的 10 倍以上；Kimi Linear（KDA + MLA，3:1）报告在 1M 下 KV 缓存最多减少 75%、解码吞吐量最高 6 倍（[arXiv:2510.26692](https://arxiv.org/abs/2510.26692)）。
 - **以 SSM 为主的混合架构（2025-08 → 2026-03）。** Nemotron Nano 2 在 62 层中只保留 6 个注意力层（28 个 Mamba-2、28 个 FFN），报告在推理负载上吞吐量最高为 Qwen3-8B 的 6.3 倍（[arXiv:2508.14444](https://arxiv.org/abs/2508.14444)）；Mamba-3 的 MIMO 形式提高了解码的算术强度，并以一半的状态大小达到 Mamba-2 的困惑度（[arXiv:2603.15569](https://arxiv.org/abs/2603.15569)）。
 - **MoE 内部的算力分配（2026-03）。** 专家与注意力之间的最优计算比随总计算量呈幂律增长，并取决于稀疏度（[arXiv:2603.10379](https://arxiv.org/abs/2603.10379)）。

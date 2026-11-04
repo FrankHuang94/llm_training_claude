@@ -128,7 +128,7 @@ def run(cmd, **kw):
 
 def pandoc_html(markdown: str) -> str:
     return run(
-        ["pandoc", "-f", "markdown+tex_math_dollars-implicit_figures", "-t", "html5",
+        ["pandoc", "-f", "markdown+tex_math_dollars+lists_without_preceding_blankline-implicit_figures", "-t", "html5",
          "--mathml", "--highlight-style=tango", "--wrap=none"],
         input=markdown,
     )
@@ -157,7 +157,8 @@ def outline_pages(pdf_path: Path, max_depth: int = 1) -> list[tuple[str, int]]:
 
 
 def _norm(s: str) -> str:
-    return re.sub(r"\s+", "", html.unescape(s))
+    s = html.unescape(s).translate(str.maketrans("‘’“”", "''\"\""))
+    return re.sub(r"[\s*`_\\]+", "", s)
 
 
 def match_outline(toc_entries, found) -> dict[str, str]:
@@ -165,7 +166,7 @@ def match_outline(toc_entries, found) -> dict[str, str]:
     pages, i = {}, 0
     for _, text, anchor in toc_entries:
         want = _norm(text)
-        while i < len(found) and not _norm(found[i][0]).startswith(want):
+        while i < len(found) and want not in _norm(found[i][0]):
             i += 1
         if i == len(found):
             raise SystemExit(f"heading not found in PDF outline: {text!r}")
@@ -220,6 +221,13 @@ def build(args):
     combined = re.sub(r"(?<!!)\[([^\]]+)\]\((?!https?:|#)[^)]*\)", r"\1", "\n\n".join(parts))
     content_html = pandoc_html(combined)
 
+    def mark_wide(m: re.Match) -> str:
+        head = re.search(r"<tr[^>]*>(.*?)</tr>", m.group(0), flags=re.S)
+        ncols = len(re.findall(r"<th[\s>]", head.group(1))) if head else 0
+        return m.group(0).replace("<table>", '<table class="wide">', 1) if ncols >= 7 else m.group(0)
+
+    content_html = re.sub(r"<table>.*?</table>", mark_wide, content_html, flags=re.S)
+
     def toc_html(pages: dict[str, str]) -> str:
         rows = []
         for kind, text, anchor in toc_entries:
@@ -241,6 +249,7 @@ def build(args):
 
     out_pdf = Path(args.out).resolve()
     with tempfile.TemporaryDirectory() as td:
+        if args.debug_dir: td = args.debug_dir
         td = Path(td)
         (td / "cover.html").write_text(cover_html, encoding="utf-8")
         run(["node", str(HERE / "render_pdf.js"), str(td / "cover.html"), str(td / "cover.pdf"), "--plain"])
@@ -260,7 +269,17 @@ def build(args):
 
         writer = PdfWriter()
         writer.append(str(td / "cover.pdf"))
-        writer.append(str(td / "body.pdf"))  # keeps the bookmark outline
+        writer.append(str(td / "body.pdf"), import_outline=False)
+        # Clean bookmarks built from the TOC (Chromium's auto-outline duplicates wrapped titles).
+        offset = len(PdfReader(str(td / "cover.pdf")).pages) - 1
+        parent = None
+        for kind, text, anchor in toc_entries:
+            page_index = offset + int(pages[anchor])
+            if kind == "topic" and parent is not None:
+                writer.add_outline_item(text, page_index, parent=parent)
+            else:
+                item = writer.add_outline_item(text, page_index)
+                parent = item if kind == "chapter" else None
         writer.add_metadata({"/Title": args.title, "/Subject": args.subtitle,
                              "/Creator": "pandoc + Chromium (Playwright)"})
         writer.page_mode = "/UseOutlines"
@@ -284,6 +303,7 @@ def main():
     ap.add_argument("--preface-title", default="前言与使用说明")
     ap.add_argument("--toc-title", default="目　录")
     ap.add_argument("--chapter-label", default="第 {n} 部分")
+    ap.add_argument("--debug-dir", default=None, help="keep intermediate files in this directory")
     ap.add_argument("--keep-html", default=None, help="also save the final body HTML here")
     build(ap.parse_args())
 

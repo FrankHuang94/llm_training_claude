@@ -63,4 +63,4 @@
 - Nakano, R. et al. (2021). *WebGPT (best-of-N).* arXiv:2112.09332.
 - Anthony, T. et al. (2017). *Thinking Fast and Slow (Expert Iteration).* arXiv:1705.08439.
 - Zhao, A. et al. (2025). *Absolute Zero.* arXiv:2505.03335.
-- Nebius (2025). *Long-Context Multi-Turn SWE Agents with RL.* arXiv:2508.03501.
+- Nebius (2025). Long-context multi-turn SWE agents trained with rejection fine-tuning + RL (descriptive title). arXiv:2508.03501.

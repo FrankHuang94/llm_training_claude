@@ -71,7 +71,7 @@ Measuring autonomy beyond ~16-hour horizons; building verifiable environments fo
 - Yang, J. et al. (2024). *SWE-agent.* arXiv:2405.15793.
 - Kwa, T. et al. (2025). *Measuring AI Ability to Complete Long Tasks.* arXiv:2503.14499.
 - Zhipu AI (2025). *ComputerRL.* arXiv:2508.14040.
-- Nebius (2025). *Long-Context Multi-Turn SWE Agents with RL.* arXiv:2508.03501.
+- Nebius (2025). Long-context multi-turn SWE agents trained with rejection fine-tuning + RL (descriptive title). arXiv:2508.03501.
 - MacDiarmid, M. et al. (2025). *Natural Emergent Misalignment from Reward Hacking in Production RL.* arXiv:2511.18397.
 - Kimi Team (2026). *Kimi K2.5: Agent Swarm / Parallel-Agent RL.* arXiv:2602.02276.
 - KAT-Coder Team (2026). *KAT-Coder-V2.5.* arXiv:2607.05471.
