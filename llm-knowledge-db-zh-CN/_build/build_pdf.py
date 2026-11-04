@@ -111,7 +111,7 @@ def demote(md: str, by: int = 1) -> str:
         elif not in_fence:
             m = HEADING_RE.match(line)
             if m:
-                line = "#" * min(len(m.group(1)) + by, 6) + m.group(2)
+                line = "#" * max(1, min(len(m.group(1)) + by, 6)) + m.group(2)
         out.append(line)
     return "\n".join(out)
 
@@ -189,9 +189,19 @@ def build(args):
                                     count=1, flags=re.M).strip()) + "\n\n"
     preface_md += front_body.replace("\n---", "\n") + "\n\n" + demote(back) + "\n"
 
-    # --- chapters ------------------------------------------------------------------
     toc_entries = [("front", args.preface_title, "preface")]
     parts = [preface_md]
+
+    # --- optional "what's new" digest (kept at h1 level, links rewritten) -------------
+    whats_new = src / "WHATS_NEW_2026.md"
+    if whats_new.exists():
+        body, wtitle = transform_file(whats_new.read_text(encoding="utf-8"), "", "whats-new")
+        body = demote(body, -1).replace(f"{{#{anchor_for('', 'whats-new')} .topic}}",
+                                        "{#whats-new .front}", 1)
+        toc_entries.append(("front", wtitle, "whats-new"))
+        parts.append(body)
+
+    # --- chapters ------------------------------------------------------------------
     for ci, (folder, ctitle, files) in enumerate(chapters):
         num = folder.split("_")[0]
         cid = f"ch-{num}"
@@ -206,7 +216,9 @@ def build(args):
             body, ftitle = transform_file(path.read_text(encoding="utf-8"), ffolder, fstem)
             toc_entries.append(("topic", ftitle, anchor_for(ffolder, fstem)))
             parts.append(body)
-    content_html = pandoc_html("\n\n".join(parts))
+    # Links to files outside the book (README/GLOSSARY/PDF/English folder) become plain text.
+    combined = re.sub(r"(?<!!)\[([^\]]+)\]\((?!https?:|#)[^)]*\)", r"\1", "\n\n".join(parts))
+    content_html = pandoc_html(combined)
 
     def toc_html(pages: dict[str, str]) -> str:
         rows = []

@@ -1,20 +1,24 @@
 # LLM Training Knowledge Database
 
-> **Last Updated:** 2026-06-18
+> **Last Updated:** 2026-11-04
 > **Purpose:** A structured, PhD-level research reference and technical-interview preparation resource covering the full lifecycle of Large Language Model training — foundations, data, pretraining, post-training, reasoning, alignment, efficiency, multimodality, lab strategy, and emerging frontiers.
 > **Audience:** A 5th-year CS PhD candidate targeting research/engineering roles at OpenAI, Anthropic, Google DeepMind, Meta AI, DeepSeek, Mistral, xAI, and peers.
 
-Every topic file follows a consistent template: **Overview → Core Concepts → Key Challenges → Solutions & Current Best Practices → Lab Perspectives → Latest Developments (2023–2026) → Interview Angles → Open Problems → References.**
+Every topic file follows a consistent template: **Overview → Core Concepts → Key Challenges → Solutions & Current Best Practices → Lab Perspectives → Latest Developments (2023–Nov 2026) → Interview Angles → Open Problems → References.**
+
+> 🆕 **Start here if you studied an earlier version:** [`WHATS_NEW_2026.md`](WHATS_NEW_2026.md) — a one-page digest of what changed from mid-2025 to November 2026 (frontier models, hybrid/sparse attention, trillion-parameter open MoEs, FP4 training, RL scaling, agents, evals, safety frameworks), with links into the topic files.
+>
+> 🇨🇳 **Simplified Chinese reference translation:** [`../llm-knowledge-db-zh-CN/`](../llm-knowledge-db-zh-CN/) (with a print-ready PDF).
 
 ---
 
 ## 00_foundations — Transformer & Scaling Fundamentals
 - [`00_transformer_architecture.md`](00_foundations/00_transformer_architecture.md) — Vaswani 2017, decoder-only vs encoder-decoder, self-attention math, modern variants.
-- [`01_attention_mechanisms.md`](00_foundations/01_attention_mechanisms.md) — FlashAttention 1/2/3, MQA, GQA, sliding-window, ring attention, KV cache.
+- [`01_attention_mechanisms.md`](00_foundations/01_attention_mechanisms.md) — FlashAttention 1/2/3, MQA, GQA, MLA, sliding-window, ring attention, KV cache, gated attention, sparse (DSA) and hybrid linear attention.
 - [`02_tokenization.md`](00_foundations/02_tokenization.md) — BPE, WordPiece, SentencePiece, Unigram, byte-level, fertility, the tokenization-bottleneck debate.
 - [`03_positional_encoding.md`](00_foundations/03_positional_encoding.md) — sinusoidal, learned, RoPE, ALiBi, YaRN, LongRoPE.
 - [`04_scaling_laws.md`](00_foundations/04_scaling_laws.md) — Kaplan vs Chinchilla, compute-optimal training, emergence debate.
-- [`05_model_architecture_variants.md`](00_foundations/05_model_architecture_variants.md) — GPT/PaLM/LLaMA/Mistral/Mixtral/DeepSeek design choices, norm/activation/MoE.
+- [`05_model_architecture_variants.md`](00_foundations/05_model_architecture_variants.md) — GPT/PaLM/LLaMA/Mistral/DeepSeek/Qwen/Kimi/gpt-oss design choices, norm/activation/MoE, 2026 trillion-scale hybrids.
 - [`06_information_theory_basics.md`](00_foundations/06_information_theory_basics.md) — entropy, cross-entropy, KL, perplexity, bits-per-byte, MDL.
 
 ## 01_data — Data Curation & Synthesis
@@ -29,8 +33,8 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 - [`00_pretraining_objectives.md`](02_pretraining/00_pretraining_objectives.md) — CLM, MLM, prefix-LM, FIM, UL2, span corruption.
 - [`01_distributed_training.md`](02_pretraining/01_distributed_training.md) — DP/TP/PP/SP, ZeRO, FSDP, Megatron, 3D parallelism.
 - [`02_training_stability.md`](02_pretraining/02_training_stability.md) — loss spikes, clipping, warmup, init, muP, z-loss, qk-norm.
-- [`03_optimizer_choices.md`](02_pretraining/03_optimizer_choices.md) — AdamW, Adafactor, LION, Sophia, Muon; LR schedules (cosine, WSD).
-- [`04_mixed_precision_and_quantization.md`](02_pretraining/04_mixed_precision_and_quantization.md) — fp16/bf16/fp8, loss scaling, Transformer Engine.
+- [`03_optimizer_choices.md`](02_pretraining/03_optimizer_choices.md) — AdamW, Adafactor, LION, Sophia, Muon/MuonClip/Dion; LR schedules (cosine, WSD).
+- [`04_mixed_precision_and_quantization.md`](02_pretraining/04_mixed_precision_and_quantization.md) — fp16/bf16/fp8, MXFP4/NVFP4 pretraining, loss scaling, Transformer Engine.
 - [`05_compute_and_memory_efficiency.md`](02_pretraining/05_compute_and_memory_efficiency.md) — checkpointing, offloading, MFU, the 6N rule.
 - [`06_checkpoint_and_resumption.md`](02_pretraining/06_checkpoint_and_resumption.md) — sharded checkpoints, async saving, fault tolerance.
 
@@ -41,7 +45,7 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 - [`03_RLHF.md`](03_posttraining/03_RLHF.md) — InstructGPT pipeline, PPO, KL penalty, reward hacking.
 - [`04_reward_modeling.md`](03_posttraining/04_reward_modeling.md) — Bradley-Terry, overoptimization, PRM vs ORM, RM ensembles.
 - [`05_DPO_and_preference_optimization.md`](03_posttraining/05_DPO_and_preference_optimization.md) — DPO derivation, IPO, KTO, SimPO, ORPO.
-- [`06_GRPO_and_RLVR.md`](03_posttraining/06_GRPO_and_RLVR.md) — DeepSeek GRPO, verifiable rewards, R1-Zero.
+- [`06_GRPO_and_RLVR.md`](03_posttraining/06_GRPO_and_RLVR.md) — DeepSeek GRPO, DAPO/GSPO/CISPO, verifiable rewards, R1-Zero, RL scaling laws, async RL.
 - [`07_constitutional_AI_and_RLAIF.md`](03_posttraining/07_constitutional_AI_and_RLAIF.md) — Anthropic CAI, AI feedback, scalable oversight.
 - [`08_rejection_sampling_and_best_of_N.md`](03_posttraining/08_rejection_sampling_and_best_of_N.md) — best-of-N, RAFT, STaR, iterative distillation.
 
@@ -52,6 +56,7 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 - [`03_tool_use_and_function_calling.md`](04_reasoning_and_agents/03_tool_use_and_function_calling.md) — ReAct, function calling, code interpreters, MCP.
 - [`04_agentic_frameworks.md`](04_reasoning_and_agents/04_agentic_frameworks.md) — LangChain, AutoGen, CrewAI, agent loops, memory.
 - [`05_multi_agent_systems.md`](04_reasoning_and_agents/05_multi_agent_systems.md) — multi-agent debate, mixture-of-agents, orchestration.
+- [`06_agentic_coding_and_computer_use.md`](04_reasoning_and_agents/06_agentic_coding_and_computer_use.md) — 🆕 long-horizon coding agents, computer use, agentic RL environments, subagents, METR time horizons.
 
 ## 05_alignment_and_safety — Safety, Interpretability, Evaluation
 - [`00_alignment_overview.md`](05_alignment_and_safety/00_alignment_overview.md) — outer/inner alignment, specification gaming, the alignment problem.
@@ -59,7 +64,8 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 - [`02_jailbreaks_and_red_teaming.md`](05_alignment_and_safety/02_jailbreaks_and_red_teaming.md) — prompt injection, adversarial suffixes, automated red-teaming.
 - [`03_interpretability_and_mechanistic_analysis.md`](05_alignment_and_safety/03_interpretability_and_mechanistic_analysis.md) — superposition, SAEs, circuits, induction heads.
 - [`04_scalable_oversight.md`](05_alignment_and_safety/04_scalable_oversight.md) — debate, RRM, weak-to-strong, process supervision.
-- [`05_evaluation_and_benchmarks.md`](05_alignment_and_safety/05_evaluation_and_benchmarks.md) — MMLU, GPQA, MATH, SWE-bench, Arena, contamination.
+- [`05_evaluation_and_benchmarks.md`](05_alignment_and_safety/05_evaluation_and_benchmarks.md) — MMLU, GPQA, HLE, SWE-bench Pro, ARC-AGI-3, GDPval, METR, Arena, contamination, eval awareness.
+- [`06_frontier_safety_frameworks_and_governance.md`](05_alignment_and_safety/06_frontier_safety_frameworks_and_governance.md) — 🆕 RSP / Preparedness / FSF, tiered & restricted releases, EU AI Act, SB 53, copyright rulings.
 
 ## 06_efficiency — Parameter & Inference Efficiency
 - [`00_parameter_efficient_finetuning.md`](06_efficiency/00_parameter_efficient_finetuning.md) — adapters, prefix/prompt tuning, (IA)³, BitFit.
@@ -82,7 +88,7 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 - [`02_google_deepmind_roadmap.md`](08_lab_roadmaps/02_google_deepmind_roadmap.md)
 - [`03_meta_ai_roadmap.md`](08_lab_roadmaps/03_meta_ai_roadmap.md)
 - [`04_deepseek_roadmap.md`](08_lab_roadmaps/04_deepseek_roadmap.md)
-- [`05_mistral_and_others.md`](08_lab_roadmaps/05_mistral_and_others.md)
+- [`05_mistral_and_others.md`](08_lab_roadmaps/05_mistral_and_others.md) — Mistral, Qwen, Kimi, GLM, MiniMax, xAI, NVIDIA, AI2 and others
 - [`06_lab_comparison_matrix.md`](08_lab_roadmaps/06_lab_comparison_matrix.md)
 
 ## 09_emerging_frontiers — Research Frontiers
@@ -92,6 +98,7 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 - [`03_test_time_training.md`](09_emerging_frontiers/03_test_time_training.md) — TTT layers, online adaptation.
 - [`04_neuromorphic_and_non_transformer.md`](09_emerging_frontiers/04_neuromorphic_and_non_transformer.md) — Mamba, RWKV, Hyena, RetNet, SSMs.
 - [`05_frontier_open_problems.md`](09_emerging_frontiers/05_frontier_open_problems.md) — reasoning, compositionality, sample efficiency, AGI planning.
+- [`06_diffusion_and_hybrid_language_models.md`](09_emerging_frontiers/06_diffusion_and_hybrid_language_models.md) — 🆕 diffusion LMs (LLaDA, Gemini Diffusion, Mercury), hybrid linear/sparse-attention production models, MTP.
 
 ## 10_interview_prep — Interview Preparation
 - [`00_system_design_questions.md`](10_interview_prep/00_system_design_questions.md) — training infra, RLHF pipelines, eval design.
@@ -104,6 +111,7 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 
 ## Recommended Reading Order for Interview Prep
 
+0. **What's new** (`WHATS_NEW_2026.md`) — if you studied an earlier version, start here.
 1. **Foundations** (`00_foundations/`) — attention math and scaling laws are probed in nearly every interview.
 2. **Post-training** (`03_posttraining/`) — highest interview relevance: RLHF, DPO, GRPO.
 3. **Reasoning & agents** (`04_reasoning_and_agents/`) — the 2024–2026 frontier.
@@ -116,4 +124,4 @@ Every topic file follows a consistent template: **Overview → Core Concepts →
 ## Conventions
 - Math uses LaTeX-style inline `$...$` and block `$$...$$` notation.
 - Papers cited with author, year, and arXiv ID where available.
-- Content reflects public information through mid-2026.
+- Content reflects public information through early November 2026 (major refresh on 2026-11-04). Vendor-reported benchmark numbers are labelled as such; weakly sourced items are hedged.
